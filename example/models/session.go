@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/spanner"
@@ -40,6 +41,7 @@ func CreateSession(ctx context.Context, receiver, password string, secret string
 	}
 
 	var user *User
+	var s *Session
 	_, err = session.Database(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		u, err := readUserByPhone(ctx, txn, receiver)
 		if err != nil {
@@ -52,7 +54,7 @@ func CreateSession(ctx context.Context, receiver, password string, secret string
 		if err != nil {
 			return session.AuthorizationError(ctx)
 		}
-		s, err := addSession(ctx, txn, u.UserId, secret)
+		s, err = addSession(ctx, txn, u.UserId, secret)
 		if err != nil {
 			return err
 		}
@@ -72,6 +74,14 @@ func CreateSession(ctx context.Context, receiver, password string, secret string
 		}
 		return nil, session.TransactionError(ctx, err)
 	}
+
+	if user.MixinUserId() != "" {
+		go func(user *User, s *Session) {
+			content := fmt.Sprintf("Your account %s has been signed on %s from IP %s, please make sure it is you that signed in", user.FullName, s.CreatedAt.Format("2006-01-02 15:04:05"), s.RemoteAddress)
+			NotifyMessager(ctx, user.MixinUserId(), content)
+		}(user, s)
+	}
+
 	return user, nil
 }
 
