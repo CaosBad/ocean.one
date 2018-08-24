@@ -60,7 +60,17 @@ func scanningSnapshot(ctx context.Context, checkpoint time.Time) {
 			time.Sleep(PollInterval)
 			continue
 		}
+		guarantee, err := guaranteeSnapshots(ctx, checkpoint, limit)
+		if err != nil {
+			log.Println("PollMixinNetwork ERROR", err)
+			time.Sleep(PollInterval)
+			continue
+		}
 		for _, s := range snapshots {
+			if _, ok := guarantee[s.SnapshotId]; !ok {
+				log.Println("PollMixinNetwork Missing SnapshotId ", s.SnapshotId)
+			}
+			delete(guarantee, s.SnapshotId)
 			for i := 0; i < 3; i++ {
 				if err := processSnapshot(ctx, s); err == nil {
 					break
@@ -69,7 +79,24 @@ func scanningSnapshot(ctx context.Context, checkpoint time.Time) {
 			}
 			checkpoint = s.CreatedAt
 		}
+		for k, v := range guarantee {
+			if v.Before(checkpoint) {
+				log.Println("PollMixinNetwork Missing SnapshotId ", k)
+			}
+		}
 	}
+}
+
+func guaranteeSnapshots(ctx context.Context, checkpoint time.Time, limit int) (map[string]time.Time, error) {
+	snapshots, err := requestMixinNetwork(ctx, checkpoint, limit)
+	if err != nil {
+		return nil, err
+	}
+	collection := make(map[string]time.Time)
+	for _, snapshot := range snapshots {
+		collection[snapshot.SnapshotId] = snapshot.CreatedAt
+	}
+	return collection, nil
 }
 
 func processSnapshot(ctx context.Context, s *Snapshot) error {
