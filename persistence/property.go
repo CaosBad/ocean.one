@@ -7,7 +7,7 @@ import (
 	"cloud.google.com/go/spanner"
 	"google.golang.org/api/iterator"
 )
-
+// value store in spanner
 type Property struct {
 	Key       string
 	Value     string

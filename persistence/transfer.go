@@ -27,7 +27,7 @@ type Transfer struct {
 	UserId     string    `spanner:"user_id"`
 	BrokerId   string    `spanner:"broker_id"`
 }
-
+// get transfer count
 func CountPendingTransfers(ctx context.Context) (int64, error) {
 	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
 		SQL: "SELECT COUNT(*) FROM transfers",
@@ -41,20 +41,21 @@ func CountPendingTransfers(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 	var count int64
-	err = row.Columns(&count)
+	err = row.Columns(&count)  // convert data col to value 
 	return count, err
 }
-
+// ger pending trasfer list
 func ListPendingTransfers(ctx context.Context, broker string, limit int) ([]*Transfer, error) {
 	txn := Spanner(ctx).ReadOnlyTransaction()
 	defer txn.Close()
-
+  // query with query
 	it := txn.Query(ctx, spanner.Statement{
+		// sql inject 
 		SQL:    fmt.Sprintf("SELECT transfer_id FROM transfers@{FORCE_INDEX=transfers_by_broker_created} WHERE broker_id=@broker ORDER BY broker_id,created_at LIMIT %d", limit),
 		Params: map[string]interface{}{"broker": broker},
 	})
 	defer it.Stop()
-
+	// get transfer ids
 	transferIds := make([]string, 0)
 	for {
 		row, err := it.Next()
@@ -76,7 +77,7 @@ func ListPendingTransfers(ctx context.Context, broker string, limit int) ([]*Tra
 		Params: map[string]interface{}{"transfer_ids": transferIds},
 	})
 	defer tit.Stop()
-
+	// get real trans data
 	transfers := make([]*Transfer, 0)
 	for {
 		row, err := tit.Next()
@@ -93,7 +94,7 @@ func ListPendingTransfers(ctx context.Context, broker string, limit int) ([]*Tra
 		transfers = append(transfers, &transfer)
 	}
 }
-
+// del transfer from spanner
 func ExpireTransfers(ctx context.Context, transfers []*Transfer) error {
 	var set []spanner.KeySet
 	for _, t := range transfers {
@@ -104,7 +105,7 @@ func ExpireTransfers(ctx context.Context, transfers []*Transfer) error {
 	})
 	return err
 }
-
+// 
 func ReadTransferTrade(ctx context.Context, tradeId, assetId string) (*Trade, error) {
 	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{
 		SQL:    "SELECT * FROM trades WHERE trade_id=@trade_id",
@@ -129,7 +130,7 @@ func ReadTransferTrade(ctx context.Context, tradeId, assetId string) (*Trade, er
 		}
 	}
 }
-
+// add transfer record in spanner
 func CreateRefundTransfer(ctx context.Context, brokerId, userId, assetId string, amount number.Decimal, trace string) error {
 	if amount.Exhausted() {
 		return nil

@@ -37,7 +37,7 @@ type Error struct {
 	Code        int    `json:"code"`
 	Description string `json:"description"`
 }
-
+// trans snapshot
 type Snapshot struct {
 	SnapshotId string `json:"snapshot_id"`
 	Amount     string `json:"amount"`
@@ -51,7 +51,7 @@ type Snapshot struct {
 	OpponentId string `json:"opponent_id"`
 	Data       string `json:"data"`
 }
-
+// order
 type OrderAction struct {
 	U []byte    // user
 	S string    // side
@@ -71,7 +71,7 @@ func (ex *Exchange) ensureProcessSnapshot(ctx context.Context, s *Snapshot) {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
-
+// 保存逻辑
 func (ex *Exchange) processSnapshot(ctx context.Context, s *Snapshot) error {
 	if ex.brokers[s.UserId] == nil {
 		return nil
@@ -222,7 +222,7 @@ func (ex *Exchange) decryptOrderAction(ctx context.Context, data string) (*Order
 	}
 	return &action, nil
 }
-
+// get Snapshot by time
 func (ex *Exchange) requestMixinNetwork(ctx context.Context, checkpoint time.Time, limit int) ([]*Snapshot, error) {
 	uri := fmt.Sprintf("/network/snapshots?offset=%s&order=ASC&limit=%d", checkpoint.Format(time.RFC3339Nano), limit)
 	token, err := bot.SignAuthenticationToken(config.ClientId, config.SessionId, config.SessionKey, "GET", uri, "")

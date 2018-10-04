@@ -20,7 +20,7 @@ const (
 	pingPeriod     = 5 * time.Second
 	maxMessageSize = 1024
 )
-
+// mixin msg ? webpack ?
 type BlazeMessage struct {
 	Id     string                 `json:"id"`
 	Action string                 `json:"action"`
@@ -39,7 +39,7 @@ type Client struct {
 	hubResponse    chan []byte
 	cancel         context.CancelFunc
 }
-
+// 
 func NewClient(ctx context.Context, hub *Hub, conn *websocket.Conn, id string, cancel context.CancelFunc) (*Client, error) {
 	client := &Client{
 		hub:            hub,
@@ -58,7 +58,7 @@ func (client *Client) WritePump(ctx context.Context) error {
 	defer client.conn.Close()
 	go client.loopHubChannel(ctx)
 
-	pingTicker := time.NewTicker(pingPeriod)
+	pingTicker := time.NewTicker(pingPeriod) // 5s per time
 	defer pingTicker.Stop()
 
 	for {
@@ -87,7 +87,7 @@ func (client *Client) WritePump(ctx context.Context) error {
 		}
 	}
 }
-
+// go routine 
 func (client *Client) loopHubChannel(ctx context.Context) error {
 	defer client.conn.Close()
 

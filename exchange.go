@@ -21,13 +21,13 @@ const (
 )
 
 type Exchange struct {
-	books     map[string]*engine.Book
+	books     map[string]*engine.Book  
 	codec     codec.Handle
 	snapshots map[string]bool
 	brokers   map[string]*persistence.Broker
 	mutexes   *tmap
 }
-
+// quote precision
 func QuotePrecision(assetId string) uint8 {
 	switch assetId {
 	case MixinAssetId:
@@ -65,7 +65,7 @@ func NewExchange() *Exchange {
 		mutexes:   newTmap(),
 	}
 }
-
+// exchange mian func
 func (ex *Exchange) Run(ctx context.Context) {
 	brokers, err := persistence.AllBrokers(ctx, true)
 	if err != nil {
@@ -73,9 +73,9 @@ func (ex *Exchange) Run(ctx context.Context) {
 	}
 	for _, b := range brokers {
 		ex.brokers[b.BrokerId] = b
-		go ex.PollTransfers(ctx, b.BrokerId)
+		go ex.PollTransfers(ctx, b.BrokerId) // broker transfer 
 	}
-	go ex.PollMixinMessages(ctx)
+	go ex.PollMixinMessages(ctx) // blaze I guess
 	go ex.PollMixinNetwork(ctx)
 	ex.PollOrderActions(ctx)
 }
@@ -142,7 +142,7 @@ func (ex *Exchange) ensureProcessTransfer(ctx context.Context, transfer *persist
 		time.Sleep(PollInterval)
 	}
 }
-
+//  ?? 
 func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.Transfer) error {
 	var data *TransferAction
 	switch transfer.Source {
@@ -177,6 +177,7 @@ func (ex *Exchange) processTransfer(ctx context.Context, transfer *persistence.T
 	return ex.sendTransfer(ctx, transfer.BrokerId, transfer.UserId, transfer.AssetId, number.FromString(transfer.Amount), transfer.TransferId, memo)
 }
 
+// build book entry
 func (ex *Exchange) buildBook(ctx context.Context, market string) *engine.Book {
 	return engine.NewBook(ctx, market, func(taker, maker *engine.Order, amount number.Integer) string {
 		for {
@@ -230,7 +231,7 @@ func (ex *Exchange) ensureProcessOrderAction(ctx context.Context, action *persis
 		BrokerId:        order.BrokerId,
 	}, action.Action)
 }
-
+// sync MixinNetwork with time  
 func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 	const limit = 500
 	for {
@@ -253,8 +254,8 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 			if ex.snapshots[s.SnapshotId] {
 				continue
 			}
-			ex.ensureProcessSnapshot(ctx, s)
-			checkpoint = s.CreatedAt
+			ex.ensureProcessSnapshot(ctx, s) // save Snapshot into db
+			checkpoint = s.CreatedAt // update checkpoint in order update all data
 			ex.snapshots[s.SnapshotId] = true
 		}
 		if len(snapshots) < limit {
@@ -266,7 +267,7 @@ func (ex *Exchange) PollMixinNetwork(ctx context.Context) {
 		}
 	}
 }
-
+// sync Mixin msg
 func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 	for {
 		err := bot.Loop(ctx, ex, config.ClientId, config.SessionId, config.SessionKey)
@@ -276,7 +277,7 @@ func (ex *Exchange) PollMixinMessages(ctx context.Context) {
 		}
 	}
 }
-
+// 
 func (ex *Exchange) OnMessage(ctx context.Context, mc *bot.MessageContext, msg bot.MessageView, userId string) error {
 	return nil
 }

@@ -120,7 +120,7 @@ func handleContext(handler http.Handler, src context.Context) http.Handler {
 		handler.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
-
+// cors
 func handleCORS(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")

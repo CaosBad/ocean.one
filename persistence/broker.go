@@ -36,9 +36,9 @@ type Broker struct {
 
 	DecryptedPIN string `spanner:"-"`
 }
-
+// find all brokers
 func AllBrokers(ctx context.Context, decryptPIN bool) ([]*Broker, error) {
-	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{SQL: "SELECT * FROM brokers"})
+	it := Spanner(ctx).Single().Query(ctx, spanner.Statement{SQL: "SELECT * FROM brokers"}) // query brokers
 	defer it.Stop()
 
 	brokers := []*Broker{
@@ -52,14 +52,14 @@ func AllBrokers(ctx context.Context, decryptPIN bool) ([]*Broker, error) {
 	}
 
 	for {
-		row, err := it.Next()
+		row, err := it.Next() // find query result
 		if err == iterator.Done {
 			return brokers, nil
 		} else if err != nil {
 			return brokers, err
 		}
 		var broker Broker
-		err = row.ToStruct(&broker)
+		err = row.ToStruct(&broker) // query data to struct
 		if err != nil {
 			return brokers, err
 		}
@@ -72,7 +72,7 @@ func AllBrokers(ctx context.Context, decryptPIN bool) ([]*Broker, error) {
 		brokers = append(brokers, &broker)
 	}
 }
-
+// add broker
 func AddBroker(ctx context.Context) (*Broker, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
@@ -131,14 +131,14 @@ func AddBroker(ctx context.Context) (*Broker, error) {
 	if err != nil {
 		return nil, err
 	}
-	insertBroker, err := spanner.InsertStruct("brokers", broker)
+	insertBroker, err := spanner.InsertStruct("brokers", broker) // turn struct to spnner data 
 	if err != nil {
 		return nil, err
 	}
-	_, err = Spanner(ctx).Apply(ctx, []*spanner.Mutation{insertBroker})
+	_, err = Spanner(ctx).Apply(ctx, []*spanner.Mutation{insertBroker}) // insert broker
 	return broker, err
 }
-
+// decrypt pin 
 func (b *Broker) decryptPIN() error {
 	privateBlock, _ := pem.Decode([]byte(config.AssetPrivateKey))
 	privateKey, err := x509.ParsePKCS1PrivateKey(privateBlock.Bytes)
@@ -168,7 +168,7 @@ func (b *Broker) decryptPIN() error {
 	b.DecryptedPIN = string(source[:length-unpadding])
 	return nil
 }
-
+// 
 func (b *Broker) setupPIN(ctx context.Context) error {
 	pin, err := generateSixDigitCode(ctx)
 	if err != nil {

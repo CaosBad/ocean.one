@@ -36,7 +36,7 @@ type Book struct {
 	bids        *Page
 	queue       *cache.Queue
 }
-
+// book with callback functions
 func NewBook(ctx context.Context, market string, transact TransactCallback, cancel CancelCallback) *Book {
 	return &Book{
 		market:      market,
@@ -186,7 +186,7 @@ func (book *Book) cancelOrder(ctx context.Context, order *Order) {
 		book.cacheOrderEvent(ctx, cache.EventTypeOrderCancel, order.Side, order.Price, order.RemainingAmount, order.RemainingFunds, order.Id)
 	}
 }
-
+// match order
 func (book *Book) Run(ctx context.Context) {
 	go book.queue.Loop(ctx)
 
