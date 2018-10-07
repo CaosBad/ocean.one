@@ -23,7 +23,7 @@ type RequestHandler struct {
 	upgrader *websocket.Upgrader
 	router   *httptreemux.TreeMux
 }
-
+// inpl http.Handler interface
 func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer bugsnag.Recover(r, bugsnag.ErrorClass{Name: "cache.ServeHTTP"})
 
@@ -33,7 +33,7 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	if r.URL.Path != "/" {
-		handler.router.ServeHTTP(w, r)
+		handler.router.ServeHTTP(w, r) // router dispatch
 		return
 	}
 
@@ -86,7 +86,7 @@ func (handler *RequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	go client.WritePump(ctx)
 	client.ReadPump(ctx)
 }
-
+// http server start
 func StartHTTP(ctx context.Context) error {
 	hub := cache.NewHub()
 	go hub.Run(ctx)
@@ -109,15 +109,15 @@ func StartHTTP(ctx context.Context) error {
 	handler = handlers.ProxyHeaders(handler)
 	handler = bugsnag.Handler(handler)
 
-	server := &http.Server{Addr: ":7000", Handler: handler}
+	server := &http.Server{Addr: ":7000", Handler: handler
 	return server.ListenAndServe()
 }
 
 func handleContext(handler http.Handler, src context.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := cache.SetupRedis(r.Context(), cache.Redis(src))
-		ctx = persistence.SetupSpanner(ctx, persistence.Spanner(src))
-		handler.ServeHTTP(w, r.WithContext(ctx))
+		ctx := cache.SetupRedis(r.Context(), cache.Redis(src)) // inject redis
+		ctx = persistence.SetupSpanner(ctx, persistence.Spanner(src)) // inject spanner db
+		handler.ServeHTTP(w, r.WithContext(ctx)) // inject context
 	})
 }
 // cors

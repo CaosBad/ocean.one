@@ -10,7 +10,7 @@ import (
 
 func standardServiceHealth(ctx context.Context) error {
 	stmt := spanner.Statement{SQL: "SELECT user_id FROM users LIMIT 1"}
-	it := session.Database(ctx).Query(ctx, stmt, "users", "standardServiceHealth")
+	it := session.Databassession.Databasee(ctx).Query(ctx, stmt, "users", "standardServiceHealth") // todo
 	defer it.Stop()
 	if _, err := it.Next(); err != nil && err != iterator.Done {
 		return session.TransactionError(ctx, err)

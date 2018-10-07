@@ -55,6 +55,6 @@ func (hub *Hub) checkHealth(ctx context.Context, name string, service Service) {
 }
 
 func (hub *Hub) registerServices() {
-	hub.services["key"] = &KeyService{}
-	hub.services["candle"] = &CandleService{}
+	hub.services["key"] = &KeyService{}  // key 
+	hub.services["candle"] = &CandleService{}  // candel
 }

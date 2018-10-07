@@ -76,7 +76,7 @@ func (ex *Exchange) Run(ctx context.Context) {
 		go ex.PollTransfers(ctx, b.BrokerId) // broker transfer 
 	}
 	go ex.PollMixinMessages(ctx) // blaze I guess
-	go ex.PollMixinNetwork(ctx)
+	go ex.PollMixinNetwork(ctx) // sync mixin network data 
 	ex.PollOrderActions(ctx)
 }
 

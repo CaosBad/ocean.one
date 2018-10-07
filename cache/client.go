@@ -39,7 +39,7 @@ type Client struct {
 	hubResponse    chan []byte
 	cancel         context.CancelFunc
 }
-// 
+// create new redis client
 func NewClient(ctx context.Context, hub *Hub, conn *websocket.Conn, id string, cancel context.CancelFunc) (*Client, error) {
 	client := &Client{
 		hub:            hub,

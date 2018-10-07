@@ -25,15 +25,15 @@ func registerVerifications(router *httptreemux.TreeMux) {
 	router.POST("/verifications", impl.create)
 	router.POST("/verifications/:id", impl.verify)
 }
-
+// new verify 
 func (impl *verificationsImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var body verificationRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
 		return
 	}
-
-	pv, err := models.CreateVerification(r.Context(), body.Category, body.Receiver, body.RecaptchaResponse)
+  // insert verification data
+	pv, err := models.CreateVerification(r.Context(), body.Category, body.Receiver, body.RecaptchaResponse) // create verify db row
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)
 		return
@@ -45,14 +45,14 @@ func (impl *verificationsImpl) create(w http.ResponseWriter, r *http.Request, _ 
 		"is_verified":     false,
 	})
 }
-
+// verify code with verification id
 func (impl *verificationsImpl) verify(w http.ResponseWriter, r *http.Request, params map[string]string) {
 	var body verificationRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
 		return
 	}
-
+  // do verifycation 
 	pv, err := models.DoVerification(r.Context(), params["id"], body.Code)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)

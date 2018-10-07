@@ -26,7 +26,7 @@ func main() {
 
 	switch *service {
 	case "http":
-		err := StartServer(spanner)
+		err := StartServer(spanner) // api server
 		if err != nil {
 			log.Println(err)
 		}

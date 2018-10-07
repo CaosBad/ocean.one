@@ -14,7 +14,7 @@ type UserView struct {
 	Phone     string `json:"phone,omitempty"`
 	MixinId   string `json:"mixin_id,omitempty"`
 }
-
+// render user info
 func RenderUserWithAuthentication(w http.ResponseWriter, r *http.Request, user *models.User) {
 	RenderDataResponse(w, r, UserView{
 		UserId:    user.UserId,

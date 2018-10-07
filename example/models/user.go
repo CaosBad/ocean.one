@@ -32,7 +32,7 @@ type User struct {
 	SessionId string
 	Key       *Key
 }
-
+// create new users 
 func CreateOrResetUser(ctx context.Context, verificationId, password, sessionSecret string) (*User, error) {
 	pkix, err := hex.DecodeString(sessionSecret)
 	if err != nil {
@@ -43,7 +43,7 @@ func CreateOrResetUser(ctx context.Context, verificationId, password, sessionSec
 		return nil, session.BadDataError(ctx)
 	}
 
-	password, err = ValidateAndEncryptPassword(ctx, password)
+	password, err = ValidateAndEncryptPassword(ctx, password) // validate pwd 
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func CreateOrResetUser(ctx context.Context, verificationId, password, sessionSec
 		ActiveAt:          createdAt,
 		CreatedAt:         createdAt,
 	}
-
+  // insert user db 
 	_, err = session.Database(ctx).ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
 		vf, err := readVerification(ctx, txn, verificationId)
 		if err != nil {
@@ -116,6 +116,7 @@ func CreateOrResetUser(ctx context.Context, verificationId, password, sessionSec
 			return err
 		}
 
+		// insert session
 		session, err := addSession(ctx, txn, user.UserId, sessionSecret)
 		if err != nil {
 			return err

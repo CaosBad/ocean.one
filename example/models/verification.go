@@ -37,14 +37,14 @@ type Verification struct {
 	CreatedAt      time.Time
 	VerifiedAt     spanner.NullTime
 }
-
+// insert into db
 func CreateVerification(ctx context.Context, category, receiver string, recaptcha string) (*Verification, error) {
 	if category != VerificationCategoryPhone && category != VerificationCategoryEmail {
 		return nil, session.BadDataError(ctx)
 	}
-	provider := wire.SESProviderAWS
+	provider := wire.SESProviderAWS // email verify service
 	if category == VerificationCategoryPhone {
-		provider = wire.SMSProviderTelesign
+		provider = wire.SMSProviderTelesign  // phone verify service
 		if phone, err := ValidatePhoneNumberFormat(ctx, receiver); err != nil {
 			return nil, err
 		} else {
@@ -74,7 +74,7 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 			return nil, session.RecaptchaVerifyError(ctx)
 		}
 	}
-
+	// resp data struct
 	vf := &Verification{
 		VerificationId: uuid.NewV4().String(),
 		Category:       category,
@@ -90,7 +90,7 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 		if err != nil {
 			return err
 		}
-		if last != nil && last.CreatedAt.After(time.Now().UTC().Add(-1*config.SMSDeliveryInterval)) {
+		if last != nil && last.CreatedAt.After(time.Now().UTC().Add(-1*config.SMSDeliveryInterval)) { // expire time
 			vf, shouldDeliver = last, false
 			return nil
 		}
@@ -124,17 +124,17 @@ func CreateVerification(ctx context.Context, category, receiver string, recaptch
 
 	return vf, nil
 }
-
+// do verification 
 func DoVerification(ctx context.Context, id, code string) (*Verification, error) {
 	limiter := session.Limiter(ctx)
 	limiterRetry := config.VerificationValidateLimit
 	limiterDuration := time.Minute * 60
 
-	vf, err := findVerificationById(ctx, id)
+	vf, err := findVerificationById(ctx, id) // query from db
 	if err != nil {
 		return nil, err
 	}
-
+  // cache maybe
 	limiterKey := "limiter:verification:receiver:" + vf.Receiver
 	limiterCount, err := limiter.Available(limiterKey, limiterDuration, limiterRetry, false)
 	if err != nil {
@@ -159,7 +159,7 @@ func DoVerification(ctx context.Context, id, code string) (*Verification, error)
 	}
 
 	if time.Now().After(vf.CreatedAt.Add(time.Minute * 30)) {
-		limiterCount, err := limiter.Available(limiterKey, limiterDuration, limiterRetry, true)
+		limiterCount, err := limiter.Available(limiterKey, limiterDuration, limiterRetry, true) // update cache ?
 		if err != nil {
 			return nil, session.ServerError(ctx, err)
 		} else if limiterCount < 1 {
@@ -168,7 +168,7 @@ func DoVerification(ctx context.Context, id, code string) (*Verification, error)
 		return nil, session.VerificationCodeExpiredError(ctx)
 	}
 
-	err = limiter.Clear(limiterKey, limiterDuration)
+	err = limiter.Clear(limiterKey, limiterDuration) // clean chache
 	if err != nil {
 		return nil, session.ServerError(ctx, err)
 	}
@@ -183,7 +183,7 @@ func DoVerification(ctx context.Context, id, code string) (*Verification, error)
 
 	return vf, nil
 }
-
+// query code in db by code
 func findVerificationById(ctx context.Context, id string) (*Verification, error) {
 	txn := session.Database(ctx).ReadOnlyTransaction()
 	defer txn.Close()
@@ -217,7 +217,7 @@ func findVerificationByReceiverAndCode(ctx context.Context, receiver, code strin
 	}
 	return vf, nil
 }
-
+// check verify frequency last verifycation
 func checkVerificationFrequency(ctx context.Context, txn durable.Transaction, vf *Verification) (*Verification, error) {
 	query := fmt.Sprintf("SELECT %s FROM verifications@{FORCE_INDEX=verifications_by_receiver_created_desc} WHERE receiver=@receiver ORDER BY receiver, created_at DESC LIMIT 1", strings.Join(verificationsColumnsFull, ","))
 	statement := spanner.Statement{SQL: query, Params: map[string]interface{}{"receiver": vf.Receiver}}
@@ -237,7 +237,7 @@ func checkVerificationFrequency(ctx context.Context, txn durable.Transaction, vf
 	}
 	return last, nil
 }
-
+// get verify data in db 
 func readVerification(ctx context.Context, txn durable.Transaction, id string) (*Verification, error) {
 	it := txn.Read(ctx, "verifications", spanner.Key{id}, verificationsColumnsFull)
 	defer it.Stop()
@@ -256,7 +256,7 @@ func verificationFromRow(row *spanner.Row) (*Verification, error) {
 	err := row.Columns(&v.VerificationId, &v.Category, &v.Receiver, &v.Code, &v.Provider, &v.CreatedAt, &v.VerifiedAt)
 	return &v, err
 }
-
+// generate verify code
 func generateSixDigitCode(ctx context.Context) (string, error) {
 	var b [8]byte
 	_, err := rand.Read(b[:])

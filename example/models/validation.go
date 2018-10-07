@@ -13,14 +13,14 @@ import (
 	"github.com/nyaruka/phonenumbers"
 	"golang.org/x/crypto/bcrypt"
 )
-
+// verify phone format 
 func ValidatePhoneNumberFormat(ctx context.Context, phone string) (string, error) {
 	phone = strings.ToUpper(strings.TrimSpace(phone))
 	if !strings.HasPrefix(phone, "+") {
 		return "", session.PhoneInvalidFormatError(ctx, phone)
 	}
 
-	number, err := phonenumbers.Parse(phone, "US")
+	number, err := phonenumbers.Parse(phone, "US")  // parse phone number
 	if err != nil {
 		return "", session.PhoneInvalidFormatError(ctx, phone)
 	}
@@ -67,7 +67,7 @@ func ValidateAndEncryptPassword(ctx context.Context, password string) (string, e
 	if len(password) < 8 {
 		return password, session.PasswordTooSimpleError(ctx)
 	}
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10) // hash pwd
 	if err != nil {
 		return password, session.ServerError(ctx, err)
 	}

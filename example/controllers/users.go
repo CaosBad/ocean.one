@@ -42,14 +42,14 @@ func (impl *usersImpl) mixin(w http.ResponseWriter, r *http.Request, params map[
 		views.RenderUserWithAuthentication(w, r, user)
 	}
 }
-
+// new users
 func (impl *usersImpl) create(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	var body userRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		views.RenderErrorResponse(w, r, session.BadRequestError(r.Context()))
 		return
 	}
-
+	// create new or reset user info 
 	user, err := models.CreateOrResetUser(r.Context(), body.VerificationId, body.Password, body.SessionSecret)
 	if err != nil {
 		views.RenderErrorResponse(w, r, err)

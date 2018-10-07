@@ -87,6 +87,7 @@ Account.prototype = {
         $('#enroll-email-form').submit();
       }
     };
+    // use phone verify submit
     $('#enroll-phone-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
@@ -99,7 +100,7 @@ Account.prototype = {
         receiver: phone,
         recaptcha_response: $('.recaptcha-response', this).val()
       };
-      self.api.account.newVerification(function (resp) {
+      self.api.account.newVerification(function (resp) { // create new verify
         $('.submit-loader', form).hide();
         $(':submit', form).show();
 
@@ -109,7 +110,7 @@ Account.prototype = {
         self.api.notify('success', i18n.t('account.notifications.phone.verification.send.success'));
         self.renderCodeStep(phone, resp.data.verification_id, purpose);
       }, params);
-    });
+    }); 
     $('#enroll-phone-form :submit').click(function (event) {
       event.preventDefault();
       var form = $(this).parents('#enroll-phone-form');
@@ -176,12 +177,12 @@ Account.prototype = {
       verificationId: verificationId
     }));
     $('#enroll-verify-form #code').focus();
-
+    // verify code submit
     $('#enroll-verify-form').submit(function (event) {
       event.preventDefault();
       var form = $(this);
       var params = FormUtils.serialize(form);
-      self.api.account.verifyVerification(function (resp) {
+      self.api.account.verifyVerification(function (resp) { // verify code 
         $('.submit-loader', form).hide();
         $(':submit', form).show();
 
@@ -361,7 +362,7 @@ Account.prototype = {
       form.submit();
     });
   },
-
+  // get assets
   assets: function () {
     const self = this;
     const preset = self.api.asset.preset();

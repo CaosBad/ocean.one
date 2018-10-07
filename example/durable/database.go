@@ -88,7 +88,7 @@ func OpenSpannerClient(ctx context.Context, name string) (*spanner.Client, error
 func (db *Database) Close() {
 	db.spanner.Close()
 }
-
+// ??
 func (db *Database) profile(collection, operation, query string) *newrelic.DatastoreSegment {
 	return &newrelic.DatastoreSegment{
 		StartTime:          newrelic.StartSegmentNow(db.transaction),

@@ -12,7 +12,7 @@ import (
 func RegisterRoutes(router *httptreemux.TreeMux) {
 	router.GET("/", root)
 	router.GET("/_hc", healthCheck)
-
+  // api router
 	registerVerifications(router)
 	registerUsers(router)
 	registerSessions(router)

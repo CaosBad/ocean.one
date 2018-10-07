@@ -107,7 +107,7 @@ func readSession(ctx context.Context, txn durable.Transaction, uid, sid string) 
 
 	return sessionFromRow(row)
 }
-
+// clean session db
 func cleanupSessions(ctx context.Context, txn *spanner.ReadWriteTransaction, uid string) error {
 	stmt := spanner.Statement{
 		SQL:    "SELECT session_id FROM sessions WHERE user_id=@user_id LIMIT 1000",

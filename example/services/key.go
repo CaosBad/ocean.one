@@ -22,7 +22,7 @@ func (service *KeyService) Run(ctx context.Context) error {
 		return err
 	}
 	for {
-		key, err := models.GeneratePoolKey(ctx)
+		key, err := models.GeneratePoolKey(ctx) // 
 		if err != nil {
 			log.Println(err)
 			time.Sleep(1 * time.Second)

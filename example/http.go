@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/unrolled/render"
 )
-
+// server func
 func StartServer(spanner *spanner.Client) error {
 	logger, err := durable.NewLoggerClient(config.GoogleCloudProject, config.Environment != "production")
 	if err != nil {

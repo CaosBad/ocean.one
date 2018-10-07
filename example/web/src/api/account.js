@@ -11,24 +11,25 @@ function Account(api) {
 }
 
 Account.prototype = {
+  // create new verify
   newVerification: function (callback, params) {
     this.api.request('POST', '/verifications', params, function(resp) {
       return callback(resp);
     });
   },
-
+  // verify verification code with id
   verifyVerification: function (callback, params) {
     this.api.request('POST', '/verifications/' + params['verification_id'], params, function(resp) {
       return callback(resp);
     });
   },
-
+  // new users
   createUser: function (callback, params) {
     const self = this;
-    var pwd = uuid().toLowerCase();
-    var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'});
-    var pub = ec.generateKeyPairHex().ecpubhex;
-    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV', pwd);
+    var pwd = uuid().toLowerCase();  // uuid 
+    var ec = new KJUR.crypto.ECDSA({'curve': 'secp256r1'}); // curve crypto
+    var pub = ec.generateKeyPairHex().ecpubhex; // public 
+    var priv = KJUR.KEYUTIL.getPEM(ec, 'PKCS8PRV', pwd); // private
 
     params['session_secret'] = '3059301306072a8648ce3d020106082a8648ce3d030107034200' + pub;
     this.api.request('POST', '/users', params, function(resp) {

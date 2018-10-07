@@ -39,7 +39,7 @@ func (service *CandleService) Run(ctx context.Context) error {
 	}
 	for _, m := range models.AllMarkets() {
 		go service.handleMarketCandles(ctx, m.Base, m.Quote)
-		go service.handleMarketStats(ctx, m.Base, m.Quote)
+		go service.handleMarketStats(ctx, m.Base, m.Quote) // 
 	}
 	for {
 		err := standardServiceHealth(ctx)
@@ -49,7 +49,7 @@ func (service *CandleService) Run(ctx context.Context) error {
 		time.Sleep(1 * time.Second)
 	}
 }
-
+// price state
 func (service *CandleService) handleMarketStats(ctx context.Context, base, quote string) {
 	const interval = 500 * time.Millisecond
 	var quoteUSD = 0.0
@@ -129,7 +129,7 @@ func (service *CandleService) handleMarketCandles(ctx context.Context, base, quo
 			if t.Quote != quote || t.Base != base {
 				log.Panicln(base, quote, t)
 			}
-
+			// save trasn 
 			for {
 				err := models.CreateOrUpdateCandle(ctx, t.Base, t.Quote, number.FromString(t.Price), number.FromString(t.Amount), t.CreatedAt)
 				if err == nil {
